@@ -1,11 +1,17 @@
+import { EventTarget } from '../event/EventTarget';
+
 let componentIdCount = 0;
 let comoponentName2class = new Map;
-let componentCache = new Map;
+let componentRegistry = new Map;
 let initPromise = null;
 
-export class Component {
+export class Component extends EventTarget {
 
-
+    /**
+     * Constant, that provides the html attribute for component identification
+     * @public
+     * @return {string}
+     */
     static get ATTRIBUTE_NAME () {
         return 'component';
     }
@@ -57,16 +63,13 @@ export class Component {
 
         element.id = element.id || `cmp-id-${componentIdCount++}`;
 
-        if (componentCache.has(element.id))
-            return componentCache.get(element.id);
+        if (componentRegistry.has(element.id))
+            return componentRegistry.get(element.id);
 
         const ctor = comoponentName2class.get(key);
         const instance = new ctor();
         instance.element = element;
         instance.ready();
-
-        componentCache.set(element.id, instance);
-
         return instance;
     }
 
@@ -115,9 +118,16 @@ export class Component {
      * @param {Element} element
      */
     set element (element) {
-        if (this._element) this._willUnsetElement();
+        if (this._element) {
+            unregisterComponent(this);
+            this._willUnsetElement();
+        }
+
         this._element = element;
-        if (this._element) this._didSetElement();
+        if (this._element) {
+            registerComponent(this);
+            this._didSetElement();
+        }
     }
 
 
@@ -172,6 +182,7 @@ export class Component {
      * Initializes the instance
      */
     constructor() {
+        super();
 
         /**
          * Provides the element object
@@ -298,10 +309,9 @@ export class Component {
      * @param {string} classname
      * @return {Array.<Component>}
      */
-    getComponentsByClass (classname) {
-        let elements = this.element.getElementsByClass(classname);
+    getComponentsByClassName (classname) {
+        let elements = this.element.getElementsByClassName(classname);
         let components = new Array;
-
         for (let i = 0, max = elements.length; i < max; i++) {
             const component = Component.getComponentByElement(elements[i]);
             if (component) components.push(component);
@@ -343,4 +353,29 @@ export class Component {
 
         return components;
     }
+}
+
+
+/**
+ * Registers a component to the component registry
+ * @param {Component}
+ */
+function registerComponent (component) {
+    if (component.element == null)
+        throw new Error('You tried to register a component, that has no element set');
+
+    component.element.id || `cmp-id-${componentIdCount++}`;
+    componentRegistry.set(component.element.id, component);
+}
+
+
+/**
+ * Unregisters a component to the component registry
+ * @param {Component} component
+ */
+function unregisterComponent (component) {
+    if (component.element == null)
+        throw new Error('You tried to unregister a component, that has no element set');
+
+    componentRegistry.delete(component.element.id);
 }
