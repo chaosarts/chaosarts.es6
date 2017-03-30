@@ -1,4 +1,5 @@
 import { EventTarget } from '../event/EventTarget';
+import { HttpRequest } from '../net/HttpRequest';
 
 let componentIdCount = 0;
 let comoponentName2class = new Map;
@@ -204,6 +205,20 @@ export class Component extends EventTarget {
          * @type {Model}
          */
         this._model = null;
+
+        /**
+         * Provides the url to the default template
+         * @protected
+         * @type {string}
+         */
+        this._templateUrl = '';
+
+        /**
+         * Provides the template string to parse
+         * @protected
+         * @type {string}
+         */
+        this._template = null;
     }
 
 
@@ -214,8 +229,21 @@ export class Component extends EventTarget {
      */
     ready () {
         if (null == this._readyPromise) {
-            const result = this._init();
-            this._readyPromise = result instanceof Promise ? /** @type {Promise} */ (result) : Promise.resolve(result);
+            if (!this._element) {
+                let promise = null;
+                if (this._template) promise = Promise.resolve(this._template);
+                else promise = fetchTemplate(this._templateUrl).then((templateString) => parseTemplate(templateString));
+
+                this._readyPromise = promise.then((template) => {
+                    this._template = template;
+                    this._element = this._template.cloneNode(true);
+                    return this._init();
+                });
+            }
+            else {
+                const result = this._init();
+                this._readyPromise = result instanceof Promise ? /** @type {Promise} */ (result) : Promise.resolve(result);
+            }
         }
 
         return this._readyPromise;
@@ -353,6 +381,15 @@ export class Component extends EventTarget {
 
         return components;
     }
+}
+
+
+/**
+ * 
+ */
+function fetchTemplate (url) {
+    let request = new HttpRequest;
+    return request.send(url);
 }
 
 
