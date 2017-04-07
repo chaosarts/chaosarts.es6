@@ -79,6 +79,11 @@ export function reflect (objpath, rootobj = window) {
 
 
 
+/**
+ * Extends a given object with default values
+ * @param {object} obj The object to extend
+ * @param {object} def The values to add to obj if not exists
+ */
 export function extend (obj, def, depth = 1) {
     for (let key in def) {
         if (!obj.hasOwnProperty(key)) {
@@ -86,10 +91,10 @@ export function extend (obj, def, depth = 1) {
             continue;
         }
 
-        if (isFinite(def[key]) && depth > 1) {
+        if (!isFinite(def[key]) && depth > 1) {
             extend(obj[key], def[key], depth - 1);
         }
     }
 
     return obj;
-} 
+}
