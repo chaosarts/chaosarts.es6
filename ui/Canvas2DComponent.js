@@ -55,4 +55,4 @@ export class Canvas2DComponent extends Component {
     }
 }
 
-Component.associate(OpenGLComponent, 'canvas2d');
+Component.associate(Canvas2DComponent, 'canvas2d');
