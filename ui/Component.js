@@ -5,6 +5,7 @@ let componentIdCount = 0;
 let comoponentName2class = new Map;
 let componentRegistry = new Map;
 let initPromise = null;
+let componentTemplate = new Map;
 
 export class Component extends EventTarget {
 
@@ -70,7 +71,7 @@ export class Component extends EventTarget {
         const ctor = comoponentName2class.get(key);
         const instance = new ctor();
         instance.element = element;
-        instance.ready();
+
         return instance;
     }
 
@@ -125,6 +126,7 @@ export class Component extends EventTarget {
         }
 
         this._element = element;
+        
         if (this._element) {
             registerComponent(this);
             this._didSetElement();
@@ -229,20 +231,19 @@ export class Component extends EventTarget {
      */
     ready () {
         if (null == this._readyPromise) {
-            if (!this._element) {
+            if (!this.element) {
                 let promise = null;
                 if (this._template) promise = Promise.resolve(this._template);
                 else promise = fetchTemplate(this._templateUrl).then((templateString) => parseTemplate(templateString));
 
                 this._readyPromise = promise.then((template) => {
                     this._template = template;
-                    this._element = this._template.cloneNode(true);
-                    return this._init();
+                    this.element = this._template.cloneNode(true);
+                    return this;
                 });
             }
             else {
-                const result = this._init();
-                this._readyPromise = result instanceof Promise ? /** @type {Promise} */ (result) : Promise.resolve(result);
+                this._readyPromise = Promise.resolve(this);
             }
         }
 
@@ -250,12 +251,12 @@ export class Component extends EventTarget {
     }
 
 
-    /**
-     * Initializes the component
-     * @protected
-     * @return {*}
-     */
-    _init () {
+    _setTemplateUrl () {
+
+    }
+
+
+    _setTemplate () {
 
     }
 
@@ -401,7 +402,10 @@ function registerComponent (component) {
     if (component.element == null)
         throw new Error('You tried to register a component, that has no element set');
 
-    component.element.id || `cmp-id-${componentIdCount++}`;
+    component.element.id = component.element.id || `cmp-id-${componentIdCount++}`;
+    if (!componentRegistry.has(component.element.id))
+        return;
+
     componentRegistry.set(component.element.id, component);
 }
 
@@ -413,6 +417,9 @@ function registerComponent (component) {
 function unregisterComponent (component) {
     if (component.element == null)
         throw new Error('You tried to unregister a component, that has no element set');
+
+    if (!componentRegistry.has(component.element.id))
+        return;
 
     componentRegistry.delete(component.element.id);
 }

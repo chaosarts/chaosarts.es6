@@ -1,0 +1,1 @@
+export { Manifest } from './parser/Manifest';
