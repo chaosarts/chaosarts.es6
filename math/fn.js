@@ -1,4 +1,35 @@
 /**
+ * Crops a numeric value to given interval
+ * @param {number} value
+ * @param {number} min
+ * @param {number} max
+ * @return {number}
+ */
+export function crop (value, min, max) {
+    return Math.max(min, Math.min(value, max));
+}
+
+
+/**
+ * Maps the value from source interval to the destination interval
+ * @param {number} value
+ * @param {number} srcMin
+ * @param {number} srcMax
+ * @param {number} dstMin
+ * @param {number} dstMax
+ * @return {number}
+ */
+export function map (value, srcMin, srcMax, dstMin, dstMax) {
+    const srcLength = srcMax - srcMin;
+    const dstLength = dstMax - dstMin;
+    const cropVal = crop(value, srcMin, srcMax);
+    const srcOffset = cropVal - srcMin;
+
+    return srcMin + srcOffset / srcLength * dstLength;
+}
+
+
+/**
  * Determines if the value is included within range between min and max
  * @param {number} value
  * @param {number} min
