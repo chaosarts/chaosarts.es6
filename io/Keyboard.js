@@ -3,7 +3,7 @@ let downKeys = array();
 
 export class Keyboard {
 
-    static get isDown (keyCode) {
+    static isDown (keyCode) {
         return downKeys.indexOf(keyCode) > -1;
     }
 
