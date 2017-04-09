@@ -1,5 +1,5 @@
 let initialized = false;
-let downKeys = array();
+let downKeys = new Array;
 
 export class Keyboard {
 
