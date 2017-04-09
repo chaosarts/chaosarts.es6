@@ -17,7 +17,7 @@ export class Keyboard {
 
 
 function onKeyDown (event) {
-    if (this.isDown(event.keyCode)) return;
+    if (Keyboard.isDown(event.keyCode)) return;
     downKeys.push(event.keyCode);
 }
 
