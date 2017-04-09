@@ -30,7 +30,7 @@ function onKeyUp (event) {
 }
 
 
-Keyboard.Apple.Code = {
+Keyboard.Code = {
     'BACKSPACE':    8,
     'TAB':          9,
     'SHIFT':        16,
