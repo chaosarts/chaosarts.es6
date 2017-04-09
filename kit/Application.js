@@ -1,4 +1,5 @@
 import { Resolver } from '../core/Resolver';
+import { Keyboard } from '../io/Keyboard';
 import { HttpRequest } from '../net/HttpRequest';
 import { Component } from '../ui/Component';
 import { Document } from '../xml/parser/Document';
@@ -99,6 +100,9 @@ export class Application {
     bootstrap (manifest) {
         if (null == this._bootstrapPromise) {
             this._bootstrapPromise = Component.init().then(() => {
+
+                Keyboard.init();
+                
                 let request = new HttpRequest;
                 return request.send(manifest, null, {
                     'mimetype': 'text/xml'
