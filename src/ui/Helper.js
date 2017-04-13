@@ -53,7 +53,7 @@ class Helper {
             key2instance.get(new ctor());
         }
 
-        return return key2instance.get(name);
+        return key2instance.get(name);
     }
 
 
