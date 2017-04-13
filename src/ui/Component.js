@@ -275,7 +275,7 @@ export class Component extends EventTarget {
             this._willUnsetElement();
 
             this._helpers.forEach(function (helper, name, map) {
-                helper.cease(this);
+                helper.deinit(this);
             });
 
             this._helpers = new Map;
@@ -293,7 +293,7 @@ export class Component extends EventTarget {
                 const helper = Helper.getHelperByName(helperName);
                 if (null == helper) continue;
                 this._helpers.set(helperName, helper);
-                helper.setup(this);
+                helper.init(this);
             }
         }
     }
