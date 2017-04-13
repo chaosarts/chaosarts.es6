@@ -1,8 +1,9 @@
+import { Helper } from './Helper';
 import { EventTarget } from '../event/EventTarget';
 import { HttpRequest } from '../net/HttpRequest';
 
 let componentIdCount = 0;
-let comoponentName2class = new Map;
+let componentKey2class = new Map;
 let componentRegistry = new Map;
 let initPromise = null;
 let componentTemplate = new Map;
@@ -23,9 +24,9 @@ export class Component extends EventTarget {
      * Associates a component name with givn constructor
      * @public
      * @param {function ()}
-     * @param {string} componentName
+     * @param {string} componentKey
      */
-    static associate (ctor, componentName) {
+    static associate (ctor, componentKey) {
         let names = Array.prototype.slice.call(arguments, 1);
 
         if (names.length == 0) {
@@ -39,11 +40,26 @@ export class Component extends EventTarget {
         do {
             const name = names.shift();
             const key = name.toLowerCase();
-            if (comoponentName2class.has(key))
+            if (componentKey2class.has(key))
                 console.warn(`A component class has already been associated with component name <${name}>. Will be overwritten.`);
 
-            comoponentName2class.set(name, ctor);
+            componentKey2class.set(name, ctor);
         } while (names.length > 0);
+    }
+
+
+    /**
+     * Returns the component class associated with given string
+     * @public
+     * @param {string} string
+     * @return {?function ()}
+     */
+    static getComponentByKey (string) {
+        const key = string.toLowerCase();
+        if (!componentKey2class.has(key))
+            return null;
+
+        return componentKey2class.get(key);
     }
 
 
@@ -55,11 +71,12 @@ export class Component extends EventTarget {
      */
     static getComponentByElement (element) {
         
-        const componentName = element.getAttribute(Component.ATTRIBUTE_NAME);
-        const key = componentName.toLowerCase();
+        const componentKey = element.getAttribute(Component.ATTRIBUTE_NAME);
+        const key = componentKey.toLowerCase();
+        const ctor = Component.getComponentByKey(key);
 
-        if (!comoponentName2class.has(key)) {
-            console.warn(`No component class associated with '${componentName}'.`);
+        if (ctor == null) {
+            console.warn(`No component class associated with '${componentKey}'.`);
             return null;
         }
 
@@ -68,7 +85,6 @@ export class Component extends EventTarget {
         if (componentRegistry.has(element.id))
             return componentRegistry.get(element.id);
 
-        const ctor = comoponentName2class.get(key);
         const instance = new ctor();
         instance.element = element;
 
@@ -120,17 +136,7 @@ export class Component extends EventTarget {
      * @param {Element} element
      */
     set element (element) {
-        if (this._element) {
-            unregisterComponent(this);
-            this._willUnsetElement();
-        }
-
-        this._element = element;
-        
-        if (this._element) {
-            registerComponent(this);
-            this._didSetElement();
-        }
+        this.setElement(element);
     }
 
 
@@ -140,7 +146,7 @@ export class Component extends EventTarget {
      * @return {?Element}
      */
     get element () {
-        return this._element;
+        return this.getElement();
     }
 
 
@@ -195,18 +201,18 @@ export class Component extends EventTarget {
         this._element = null;
 
         /**
-         * Provides the promise for initialization
-         * @private
-         * @type {?Promise}
-         */
-        this._readyPromise = null;
-
-        /**
          * Provides the model for this component
          * @private
          * @type {Model}
          */
         this._model = null;
+
+        /**
+         * Provides a map of component helpers
+         * @private
+         * @type {Map<string, function()>}
+         */
+        this._helpers = new Map;
 
         /**
          * Provides the url to the default template
@@ -221,6 +227,13 @@ export class Component extends EventTarget {
          * @type {string}
          */
         this._template = null;
+
+        /**
+         * Provides the promise for initialization
+         * @private
+         * @type {?Promise}
+         */
+        this._readyPromise = null;
     }
 
 
@@ -251,13 +264,48 @@ export class Component extends EventTarget {
     }
 
 
-    _setTemplateUrl () {
+    /**
+     * Sets the element of this component
+     * @public
+     * @param {?Element} element
+     */
+    setElement (element) {
+        if (this._element) {
+            unregisterComponent(this);
+            this._willUnsetElement();
 
+            this._helpers.forEach(function (helper, name, map) {
+                helper.cease(this);
+            });
+
+            this._helpers = new Map;
+        }
+
+        this._element = element;
+        
+        if (this._element) {
+            registerComponent(this);
+            this._didSetElement();
+
+            let helperNames = this._element.hasAttribute('helpers') ? || this._element.getAttribute('helpers').split(' ') : new Array;
+            while (helperNames.length > 0) {
+                const helperName = helperNames.shift();
+                const helper = Helper.getHelperByName(helperName);
+                if (null == helper) continue;
+                this._helpers.set(helperName, helper);
+                helper.setup(this);
+            }
+        }
     }
 
 
-    _setTemplate () {
-
+    /**
+     * Returns the element of this component
+     * @public
+     * @return {?Element}
+     */
+    getElement () {
+        return this._element;
     }
 
 
@@ -280,13 +328,12 @@ export class Component extends EventTarget {
     }
 
 
-
     /**
      * Will be called if model has been set before and will be
      * replaced or unset. The element is still available with this.model
      * @protected
      */
-    _willUnsetElement () {
+    _willUnsetModel () {
 
     }
 
@@ -295,7 +342,7 @@ export class Component extends EventTarget {
      * Will be called if property model is set with an element
      * @protected
      */
-    _didSetElement () {
+    _didSetModel () {
 
     }
 
@@ -390,9 +437,16 @@ export class Component extends EventTarget {
  */
 function fetchTemplate (url) {
     let request = new HttpRequest;
-    return request.send(url);
+    return request.send(url).then((event) => {
+        return event;
+    });
 }
 
+
+function parseTemplate (templateString) {
+    const parser = new DOMParser();
+    return parser.parseFromString(templateString, 'text/html');
+}
 
 /**
  * Registers a component to the component registry
