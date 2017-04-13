@@ -287,7 +287,7 @@ export class Component extends EventTarget {
             registerComponent(this);
             this._didSetElement();
 
-            let helperNames = this._element.hasAttribute('helpers') ? || this._element.getAttribute('helpers').split(' ') : new Array;
+            let helperNames = this._element.hasAttribute('helpers') ? this._element.getAttribute('helpers').split(' ') : new Array;
             while (helperNames.length > 0) {
                 const helperName = helperNames.shift();
                 const helper = Helper.getHelperByName(helperName);
