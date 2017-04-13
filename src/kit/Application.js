@@ -1,4 +1,6 @@
 import { Resolver } from '../core/Resolver';
+import { EventTarget } from '../event/EventTarget';
+import { Event } from '../event/Event';
 import { Keyboard } from '../io/Keyboard';
 import { HttpRequest } from '../net/HttpRequest';
 import { Component } from '../ui/Component';
@@ -15,7 +17,7 @@ let instance = null;
 /**
  * Application class
  */
-export class Application {
+export class Application extends EventTarget {
 
     /**
      * Static accessor to get the singleton instance of Application class
@@ -53,6 +55,9 @@ export class Application {
      * @private
      */
     constructor () {
+
+        if (instance != null)
+            throw new Error('Application has already been instanciated.');
 
         /**
          * The name of the application

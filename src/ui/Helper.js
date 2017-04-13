@@ -1,6 +1,6 @@
 let key2class = new Map();
 
-class Helper {
+export class Helper {
 
     /**
      * Associates a helper class with given helper names
