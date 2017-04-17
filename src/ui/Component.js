@@ -120,6 +120,8 @@ export class Component extends EventTarget {
 
             Array.prototype.forEach.call(elements, function (element, index, list) {
                 let component = Component.getComponentByElement(element);
+                if (component == null)
+                    continue;
                 promises.push(component.ready());
             });
 
