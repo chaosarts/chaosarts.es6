@@ -99,25 +99,15 @@ export class Range {
         this._max = Math.max(min, max);
 
         /**
-         * Provides the compare function
-         * @private
-         * @type {function (number, number):boolean}
-         */
-        this._minCmp = le;
-
-        /**
-         * Provides the compare function
-         * @private
-         * @type {function (number, number):boolean}
-         */
-        this._maxCmp = ge;
-
-        /**
          * Provides the type of the range
          * @private
          * @type {number}
          */
         this._type = type;
+    }
+
+    clone () {
+        let range = new Range(this._min, this._max, this._type);
     }
 
 

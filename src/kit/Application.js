@@ -56,6 +56,8 @@ export class Application extends EventTarget {
      */
     constructor () {
 
+        super();
+
         if (instance != null)
             throw new Error('Application has already been instanciated.');
 

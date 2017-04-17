@@ -1,4 +1,15 @@
 /**
+ * Determines if given element has given class
+ * @param {Element} element
+ * @param {string} classname
+ * @return {boolean}
+ */
+export function hasClass (element, classname) {
+    let classes = element.getAttribute('class').split(' ');
+    return classes.indexOf(classname) > -1;
+}
+
+/**
  * En- or disables one or mor classes for given element
  * @public
  * @param {Element} element
@@ -29,16 +40,4 @@ export function enableClass (element, enable, classname) {
     }
 
     element.setAttribute('class', outClasses.join(" "));
-}
-
-
-/**
- * Determines if given element has given class
- * @param {Element} element
- * @param {string} classname
- * @return {boolean}
- */
-export function hasClass (element, classname) {
-    let classes = element.getAttribute('class').split(' ');
-    return classes.indexOf(classname) > -1;
 }

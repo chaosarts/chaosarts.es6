@@ -42,13 +42,14 @@ export class Helper {
      */
     static getHelperByName (name) {
         const key = name.toLowerCase();
+
         if (!key2class.has(key)) {
             console.warn(`No helper found for name ${name}`);
             return null;
         }
 
         const ctor = key2class.get(key);
-        return new ctor();
+        return new ctor;
     }
 
 
@@ -114,9 +115,6 @@ export class Helper {
          * @type {Promise}
          */
         this._initPromise = null;
-
-
-        this._deinitPromise = null;
     }
 
 
@@ -154,19 +152,24 @@ export class Helper {
      * @param {string} helperName
      */
     deinit () {
-        if (!this._deinitPromise) {
+        let promise = null;
+
+        if (this._initPromise) {
             try {
                 const result = _deinit();
-                this._deinitPromise = result instanceof Promise ? /** @type {Promise} */ (result) : Promise.resolve(result);
+                promise = result instanceof Promise ? /** @type {Promise} */ (result) : Promise.resolve(result);
             }
             catch (error) {
-                this._deinitPromise = Promise.resolve(`Could not deinitialize helper ${this._name}: ${error.message}`);
+                promise = Promise.reject(`Could not deinitialize helper ${this._name}: ${error.message}`);
             }
-
-            this._component = null;
-            this._initPromise = null;
+        }
+        else {
+            promise = Promise.resolve();
         }
 
+        this._component = null;
+        this._initPromise = null;
+        return promise;
     }
 
 

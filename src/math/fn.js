@@ -98,3 +98,44 @@ export function gt (left, right) {
 export function ge (left, right) {
     return left >= right;
 }
+
+
+/**
+ * Returns the dot product of two vectors
+ * @param {Vec} left
+ * @param {Vec} right
+ * @return {number} 
+ */
+export function dot(left, right) {
+    return Math.sqrt(left.x * right.x + left.y * right.y);
+}
+
+
+/*
+ +------------------------------------------------------------------------------
+ | Trigonometry
+ +------------------------------------------------------------------------------
+ */
+
+const RAD2DEG = Math.PI / 180;
+const DEG2RAD = 180 / Math.PI;
+
+
+/**
+ * Converts a rad value to deg
+ * @param {number} deg
+ * @return {number}
+ */
+export function deg (rad) {
+    return rad * RAD2DEG;
+}
+
+
+/**
+ * Converts a deg value to rad
+ * @param {number} rad
+ * @return {number}
+ */
+export function rad (deg) {
+    return deg * DEG2RAD;
+}
