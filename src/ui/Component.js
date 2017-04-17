@@ -2,10 +2,10 @@ import { Helper } from './Helper';
 import { EventTarget } from '../event/EventTarget';
 import { HttpRequest } from '../net/HttpRequest';
 
-let componentIdCount = 0;
-let componentKey2class = new Map;
-let componentRegistry = new Map;
+let idCount = 0;
+let key2class = new Map;
 let initPromise = null;
+let componentRegistry = new Map;
 let componentTemplate = new Map;
 
 export class Component extends EventTarget {
@@ -24,9 +24,9 @@ export class Component extends EventTarget {
      * Associates a component name with givn constructor
      * @public
      * @param {function ()}
-     * @param {string} componentKey
+     * @param {string} key
      */
-    static associate (ctor, componentKey) {
+    static associate (ctor, key) {
         let names = Array.prototype.slice.call(arguments, 1);
 
         if (names.length == 0) {
@@ -40,10 +40,10 @@ export class Component extends EventTarget {
         do {
             const name = names.shift();
             const key = name.toLowerCase();
-            if (componentKey2class.has(key))
+            if (key2class.has(key))
                 console.warn(`A component class has already been associated with component name <${name}>. Will be overwritten.`);
 
-            componentKey2class.set(name, ctor);
+            key2class.set(name, ctor);
         } while (names.length > 0);
     }
 
@@ -56,10 +56,10 @@ export class Component extends EventTarget {
      */
     static getComponentByKey (string) {
         const key = string.toLowerCase();
-        if (!componentKey2class.has(key))
+        if (!key2class.has(key))
             return null;
 
-        return componentKey2class.get(key);
+        return key2class.get(key);
     }
 
 
@@ -71,18 +71,22 @@ export class Component extends EventTarget {
      */
     static getComponentByElement (element) {
         
-        const componentKey = element.getAttribute(Component.ATTRIBUTE_NAME);
-        const key = componentKey.toLowerCase();
-        const ctor = Component.getComponentByKey(key);
-
-        if (ctor == null) {
-            console.warn(`No component class associated with '${componentKey}'.`);
+        if (element.hasAttribute(Component.ATTRIBUTE_NAME)) {
+            console.warn('Could not detect component name. Attribute in element has not been set.');
             return null;
         }
 
-        element.id = element.id || `cmp-id-${componentIdCount++}`;
+        const key = element.getAttribute(Component.ATTRIBUTE_NAME).toLowerCase();
+        const ctor = Component.getComponentByKey(key);
 
-        if (componentRegistry.has(element.id))
+        if (ctor == null) {
+            console.warn(`No component class associated with '${key}'.`);
+            return null;
+        }
+
+        element.setAttribute(Component.ATTRIBUTE_NAME, key);
+
+        if (element.id && componentRegistry.has(element.id))
             return componentRegistry.get(element.id);
 
         const instance = new ctor();
@@ -129,6 +133,16 @@ export class Component extends EventTarget {
         }
 
         return initPromise;
+    }
+
+
+    /**
+     * Accessor to get the component key with which it has been fetched
+     * @public
+     * @return {string}
+     */
+    get key () {
+        return this.element ? this.element.getAttribute(Component.ATTRIBUTE_NAME) : '';
     }
 
 
@@ -191,6 +205,7 @@ export class Component extends EventTarget {
 
     /**
      * Initializes the instance
+     * @param {string} key
      */
     constructor() {
         super();
@@ -289,11 +304,23 @@ export class Component extends EventTarget {
             registerComponent(this);
             this._didSetElement();
 
-            let helperNames = this._element.hasAttribute('helpers') ? this._element.getAttribute('helpers').split(' ') : new Array;
+            let helperNames = [];
+            if (this._element.hasAttribute('helpers')) {
+                let helperNamesString = this._element.getAttribute('helpers').replace(/\s+/, ' ').trim();
+                if (helperNamesString != '') {
+                    helperNames = this._element.getAttribute('helpers').split(' ');
+                }
+            }
+
             while (helperNames.length > 0) {
                 const helperName = helperNames.shift();
-                const helper = Helper.getHelperByName(helperName);
-                if (null == helper) continue;
+                const helper = Helper.getHelperByName(`${this.key}.${helperName}`);
+
+                if (null == helper) {
+                    console.log(`Helper '${this.key}.${helperName}' not found for component ${this.key}`);
+                    continue;
+                }
+
                 this._helpers.set(helperName, helper);
                 helper.init(this);
             }
@@ -458,7 +485,7 @@ function registerComponent (component) {
     if (component.element == null)
         throw new Error('You tried to register a component, that has no element set');
 
-    component.element.id = component.element.id || `cmp-id-${componentIdCount++}`;
+    component.element.id = component.element.id || `cmp-id-${idCount++}`;
     if (!componentRegistry.has(component.element.id))
         return;
 
