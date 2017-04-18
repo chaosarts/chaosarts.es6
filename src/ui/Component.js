@@ -10,6 +10,12 @@ let componentTemplate = new Map;
 
 export class Component extends EventTarget {
 
+    /*
+     +--------------------------------------------------------------------------
+     | Static getter and setter
+     +--------------------------------------------------------------------------
+     */
+
     /**
      * Constant, that provides the html attribute for component identification
      * @public
@@ -19,6 +25,12 @@ export class Component extends EventTarget {
         return 'component';
     }
 
+
+    /*
+     +--------------------------------------------------------------------------
+     | Static methods
+     +--------------------------------------------------------------------------
+     */
 
     /**
      * Associates a component name with givn constructor
@@ -71,7 +83,7 @@ export class Component extends EventTarget {
      */
     static getComponentByElement (element) {
         
-        if (element.hasAttribute(Component.ATTRIBUTE_NAME)) {
+        if (!element.hasAttribute(Component.ATTRIBUTE_NAME)) {
             console.warn('Could not detect component name. Attribute in element has not been set.');
             return null;
         }
@@ -136,6 +148,12 @@ export class Component extends EventTarget {
     }
 
 
+    /*
+     +--------------------------------------------------------------------------
+     | Getter and setter
+     +--------------------------------------------------------------------------
+     */
+
     /**
      * Accessor to get the component key with which it has been fetched
      * @public
@@ -144,7 +162,6 @@ export class Component extends EventTarget {
     get key () {
         return this.element ? this.element.getAttribute(Component.ATTRIBUTE_NAME) : '';
     }
-
 
     /**
      * Accessor to set the element
@@ -155,7 +172,6 @@ export class Component extends EventTarget {
         this.setElement(element);
     }
 
-
     /**
      * Accessor to get the element of the component
      * @public
@@ -164,7 +180,6 @@ export class Component extends EventTarget {
     get element () {
         return this.getElement();
     }
-
 
     /**
      * Accessor to get child components of this components
@@ -202,6 +217,12 @@ export class Component extends EventTarget {
         return this._model;
     }
 
+
+    /*
+     +--------------------------------------------------------------------------
+     | Methods
+     +--------------------------------------------------------------------------
+     */
 
     /**
      * Initializes the instance
@@ -289,20 +310,19 @@ export class Component extends EventTarget {
     setElement (element) {
         if (this._element) {
             unregisterComponent(this);
-            this._willUnsetElement();
-
             this._helpers.forEach(function (helper, name, map) {
                 helper.deinit(this);
             });
 
             this._helpers = new Map;
+
+            this._willUnsetElement();
         }
 
         this._element = element;
         
         if (this._element) {
             registerComponent(this);
-            this._didSetElement();
 
             let helperNames = [];
             if (this._element.hasAttribute('helpers')) {
@@ -324,6 +344,8 @@ export class Component extends EventTarget {
                 this._helpers.set(helperName, helper);
                 helper.init(this);
             }
+            
+            this._didSetElement();
         }
     }
 

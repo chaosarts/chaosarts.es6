@@ -209,13 +209,24 @@ export class EventTarget {
             eventListener.callback.call(eventListener.scope, event);
             if (!eventListener.once) eventListeners.push(eventListener);
             if (event.immediatePropagationStopped)
-                return false;
+                break;
         }
+
+        while (i++ < max) 
+            eventListeners.push(eventListeners.shift());
 
         return true;
     }
 
 
+    /**
+     * Dtermines if the given event listener is the same as the other given 
+     * parameters, if a listener was build by these.
+     * @private
+     * @param {EventListener} eventListener
+     * @param {function (Event)} listener
+     * @param {object} 
+     */
     _isEqual (eventListener, listener, options, scope) {
         return eventListener.callback == listener && 
             eventListener.useCapture == options['useCapture'] &&
@@ -225,21 +236,26 @@ export class EventTarget {
     }
 
 
+    /**
+     * Helper method to build an options object
+     * @private
+     * @param {(boolean|object)} optionsOrCaptureFlag
+     * @return {object}
+     */
     _buildOptions (optionsOrCaptureFlag) {
-        let capture = false, once = false, passive = false;
         if (isFinite(optionsOrCaptureFlag)) {
-            capture = !!optionsOrCaptureFlag;
+            return {
+                'capture': !!/** @type {boolean} */(optionsOrCaptureFlag),
+                'once': false,
+                'passive': false
+            }
         }
         else {
-            capture = optionsOrCaptureFlag['capture'] || false;
-            once = optionsOrCaptureFlag['once'] || false;
-            passive = optionsOrCaptureFlag['passive'] || false;
-        }
-
-        return {
-            'capture': capture,
-            'once': once,
-            'passive': passive,
+            return {
+                'capture': /** @type {boolean} */ (optionsOrCaptureFlag['capture']) || false,
+                'once': /** @type {boolean} */ (optionsOrCaptureFlag['once']) || false,
+                'passive': /** @type {boolean} */ (optionsOrCaptureFlag['passive']) || false
+            }
         }
     }
 }

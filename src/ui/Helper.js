@@ -2,6 +2,12 @@ let key2class = new Map();
 
 export class Helper {
 
+    /*
+     +--------------------------------------------------------------------------
+     | Static methods
+     +--------------------------------------------------------------------------
+     */
+
     /**
      * Associates a helper class with given helper names
      * @public
@@ -53,6 +59,13 @@ export class Helper {
     }
 
 
+    /*
+     +--------------------------------------------------------------------------
+     | Getter and setter
+     +--------------------------------------------------------------------------
+     */
+
+
     /**
      * Accessor to get the name with which the helper has been associated
      * @public
@@ -61,7 +74,6 @@ export class Helper {
     get name () {
         return this._name;
     }
-
 
     /**
      * Accessor to get the component to help
@@ -72,6 +84,14 @@ export class Helper {
         return this._component;
     }
 
+    /**
+     * Accessor to get the element
+     * @public
+     * @return {Element}
+     */
+    get element () {
+        return this._component.element;
+    }
 
     /**
      * Accessor to indicate whether the helper has been initialized or not
@@ -82,10 +102,19 @@ export class Helper {
         return this._initPromise != null;
     }
 
-
+    /**
+     *
+     */
     get burntOut () {
         return this._component == null;
     }
+
+
+    /*
+     +--------------------------------------------------------------------------
+     | Methods
+     +--------------------------------------------------------------------------
+     */
 
 
     /**
@@ -173,11 +202,21 @@ export class Helper {
     }
 
 
+    /**
+     * Internal initialization method
+     * @protected
+     * @return {?Promise}
+     */
     _init () {
         throw new Error('Subclass of Helper for Component must implement setup()');
     }
 
 
+    /**
+     * Internal deinitialization
+     * @protected
+     * @return {?Promise}
+     */
     _deinit () {
         throw new Error('Subclass of Helper for Component must implement cease()');
     }
