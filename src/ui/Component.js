@@ -246,13 +246,6 @@ export class Component extends EventTarget {
         this._model = null;
 
         /**
-         * Provides a map of component helpers
-         * @private
-         * @type {Map<string, function()>}
-         */
-        this._helpers = new Map;
-
-        /**
          * Provides the url to the default template
          * @protected
          * @type {string}
@@ -310,41 +303,13 @@ export class Component extends EventTarget {
     setElement (element) {
         if (this._element) {
             unregisterComponent(this);
-            this._helpers.forEach(function (helper, name, map) {
-                helper.deinit(this);
-            });
-
-            this._helpers = new Map;
-
             this._willUnsetElement();
         }
 
         this._element = element;
         
         if (this._element) {
-            registerComponent(this);
-
-            let helperNames = [];
-            if (this._element.hasAttribute('helpers')) {
-                let helperNamesString = this._element.getAttribute('helpers').replace(/\s+/, ' ').trim();
-                if (helperNamesString != '') {
-                    helperNames = this._element.getAttribute('helpers').split(' ');
-                }
-            }
-
-            while (helperNames.length > 0) {
-                const helperName = helperNames.shift();
-                const helper = Helper.getHelperByName(`${this.key}.${helperName}`);
-
-                if (null == helper) {
-                    console.log(`Helper '${this.key}.${helperName}' not found for component ${this.key}`);
-                    continue;
-                }
-
-                this._helpers.set(helperName, helper);
-                helper.init(this);
-            }
-            
+            registerComponent(this);            
             this._didSetElement();
         }
     }
@@ -357,6 +322,52 @@ export class Component extends EventTarget {
      */
     getElement () {
         return this._element;
+    }
+
+
+    /**
+     * Sets the attribute for the element
+     * @public
+     * @param {string} name
+     * @param {string} value
+     */
+    setAttribute (name, value = '') {
+        this.element.setAttribute(name, value);
+    }
+
+
+    /**
+     * Returns the attribute of the element specified by the name
+     * @public
+     * @param {string} name
+     * @param {?string} defaultValue
+     */
+    getAttribute (name, defaultValue = undefined) {
+        if (!this.element.hasAttribute(name))
+            return defaultValue;
+
+        return this.element.getAttribute(name);
+    }
+
+
+    /**
+     * Determines whether the element has the attribute specified by name or not
+     * @public
+     * @param {string} name
+     * @return {boolean}
+     */
+    hasAttribute (name) {
+        return this.element.hasAttribute(name);
+    }
+
+
+    /**
+     * Removes the attribute specified by given name
+     * @public
+     * @param {string} name
+     */
+    removeAttribute (name) {
+        this.element.removeAttribute(name);
     }
 
 
